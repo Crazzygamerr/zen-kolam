@@ -3,23 +3,17 @@
 import { KolamPattern } from '@/types/kolam';
 import { KolamExporter } from '@/utils/kolamExporter';
 import { KolamGenerator } from '@/utils/kolamGenerator';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { KolamDisplay } from './KolamDisplay';
 
 export const KolamEditor: React.FC = () => {
 	const [currentPattern, setCurrentPattern] = useState<KolamPattern | null>(null);
-	const [isAnimated, setIsAnimated] = useState(false);
 	const [isExporting, setIsExporting] = useState(false);
 	const [size, setSize] = useState(7);
 	const [animationSpeed, setAnimationSpeed] = useState(5);
 	const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 	const [animationState, setAnimationState] = useState<'stopped' | 'playing' | 'paused'>('stopped');
 	const kolamRef = useRef<HTMLDivElement>(null);
-
-	// Generate initial pattern on component mount
-	useEffect(() => {
-		generatePattern();
-	}, []);
 
 	// Close download menu when clicking outside
 	useEffect(() => {
@@ -58,7 +52,7 @@ export const KolamEditor: React.FC = () => {
 		return Math.round(minMs + (maxMs - minMs) * inverted);
 	};
 
-	const generatePattern = () => {
+	const generatePattern = useCallback(() => {
 		console.log('🎯 Generating kolam pattern');
 
 		try {
@@ -73,7 +67,12 @@ export const KolamEditor: React.FC = () => {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			alert(`Error generating pattern: ${errorMessage}`);
 		}
-	};
+	}, [size]);
+
+	// Generate initial pattern on component mount
+	useEffect(() => {
+		generatePattern();
+	}, [generatePattern]);
 
 	const exportPattern = async (format: 'svg' | 'png' | 'gif') => {
 		if (!currentPattern || !kolamRef.current) return;
@@ -105,17 +104,17 @@ export const KolamEditor: React.FC = () => {
 		}
 	};
 
-	const getEmbedCode = async () => {
-		if (!currentPattern) return;
+	// const getEmbedCode = async () => {
+	// 	if (!currentPattern) return;
 
-		try {
-			const embedCode = await KolamExporter.getEmbedCode(currentPattern);
-			navigator.clipboard.writeText(embedCode);
-			alert('Embed code copied to clipboard!');
-		} catch (error) {
-			console.error('Failed to generate embed code:', error);
-		}
-	};
+	// 	try {
+	// 		const embedCode = await KolamExporter.getEmbedCode(currentPattern);
+	// 		navigator.clipboard.writeText(embedCode);
+	// 		alert('Embed code copied to clipboard!');
+	// 	} catch (error) {
+	// 		console.error('Failed to generate embed code:', error);
+	// 	}
+	// };
 
 	return (
 		<div className="kolam-editor bg-amber-100 text-amber-900 min-h-screen">
@@ -152,7 +151,7 @@ export const KolamEditor: React.FC = () => {
 									min="3"
 									max="15"
 									value={size}
-									onChange={(e) => setSize(parseInt(e.target.value))}
+									onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSize(parseInt(e.target.value))}
 									className="flex-1"
 									style={{ accentColor: '#f0c75e' }}
 								/>
@@ -177,7 +176,7 @@ export const KolamEditor: React.FC = () => {
 									min="1"
 									max="10"
 									value={animationSpeed}
-									onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
+									onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnimationSpeed(parseInt(e.target.value))}
 									className="flex-1"
 									style={{ accentColor: '#f0c75e' }}
 								/>
@@ -200,7 +199,6 @@ export const KolamEditor: React.FC = () => {
 										setAnimationState('stopped');
 									} else {
 										setAnimationState('playing');
-										setIsAnimated(true);
 									}
 								}}
 								className="px-6 py-3 bg-amber-900 border-2 border-white text-white rounded-lg hover:bg-amber-800 transition-colors font-medium shadow-lg flex items-center gap-2"

@@ -1,7 +1,6 @@
 'use client';
 
 import html2canvas from 'html2canvas-pro';
-// @ts-ignore - gif.js doesn't have proper TypeScript definitions
 import { ExportOptions, KolamPattern } from '@/types/kolam';
 import GIF from 'gif.js';
 
@@ -124,7 +123,7 @@ export class KolamExporter {
 			(el as HTMLElement).style.opacity = '1';
 		});
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve, _) => {
 			gif.on('finished', resolve);
 			gif.render();
 		});
