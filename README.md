@@ -20,7 +20,6 @@ A modern Next.js application for generating, displaying, and exporting tradition
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
 - **SVG** for 2D drawing and animations
-- **gif.js** for GIF export functionality
 - **html2canvas** for SVG to canvas conversion
 
 ## Getting Started
