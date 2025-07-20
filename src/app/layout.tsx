@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "Zen Kolam Generator",
+	title: "Zen Kolam",
 	description: "Generate beautiful traditional South Indian geometric patterns",
 };
 
