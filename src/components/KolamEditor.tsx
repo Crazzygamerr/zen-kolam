@@ -3,17 +3,33 @@
 import { KolamPattern } from '@/types/kolam';
 import { KolamExporter } from '@/utils/kolamExporter';
 import { KolamGenerator } from '@/utils/kolamGenerator';
+import { durationToSpeed, generateEmbedURL, speedToDuration, updateURL, useKolamURLParams } from '@/utils/urlParams';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { KolamDisplay } from './KolamDisplay';
 
 export const KolamEditor: React.FC = () => {
 	const [currentPattern, setCurrentPattern] = useState<KolamPattern | null>(null);
 	const [isExporting, setIsExporting] = useState(false);
-	const [size, setSize] = useState(7);
-	const [animationSpeed, setAnimationSpeed] = useState(5);
 	const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 	const [animationState, setAnimationState] = useState<'stopped' | 'playing' | 'paused'>('stopped');
 	const kolamRef = useRef<HTMLDivElement>(null);
+
+	// Get URL parameters
+	const urlParams = useKolamURLParams();
+	const [size, setSize] = useState(urlParams.size);
+	const [animationSpeed, setAnimationSpeed] = useState(durationToSpeed(urlParams.duration));
+	const [animationDuration, setAnimationDuration] = useState(urlParams.duration);
+
+	// Update URL when parameters change
+	useEffect(() => {
+		updateURL({ size, duration: animationDuration });
+	}, [size, animationDuration]);
+
+	// Update duration when speed changes
+	useEffect(() => {
+		const newDuration = speedToDuration(animationSpeed);
+		setAnimationDuration(newDuration);
+	}, [animationSpeed]);
 
 	// Close download menu when clicking outside
 	useEffect(() => {
@@ -29,27 +45,17 @@ export const KolamEditor: React.FC = () => {
 	// Handle animation end detection
 	useEffect(() => {
 		if (animationState === 'playing' && currentPattern) {
-			// Animation timing is now the total duration for the entire animation
-			// All curves finish within this time, so we just need the total duration
-			const totalDuration = getAnimationTiming(animationSpeed);
-
 			const timer = setTimeout(() => {
 				setAnimationState('stopped');
-			}, totalDuration);
+			}, animationDuration);
 
 			return () => clearTimeout(timer);
 		}
-	}, [animationState, currentPattern, animationSpeed]);
+	}, [animationState, currentPattern, animationDuration]);
 
-	// Convert animation speed (1-10) to total animation duration
+	// Convert animation speed (1-10) to total animation duration - kept for UI display
 	const getAnimationTiming = (speed: number) => {
-		// Speed 1 = very slow (5000ms), Speed 10 = very fast (1000ms)
-		// Linear scale for more predictable behavior
-		const minMs = 7500;   // fastest (speed 10)
-		const maxMs = 15000;   // slowest (speed 1)
-		const normalized = (speed - 1) / 9; // normalize to 0-1
-		const inverted = 1 - normalized;    // invert so 1=slow, 10=fast
-		return Math.round(minMs + (maxMs - minMs) * inverted);
+		return speedToDuration(speed);
 	};
 
 	const generatePattern = useCallback(() => {
@@ -92,7 +98,7 @@ export const KolamEditor: React.FC = () => {
 						kolamRef.current,
 						currentPattern,
 						currentPattern.name,
-						{ format: 'gif', frameCount: 30, delay: getAnimationTiming(animationSpeed) }
+						{ format: 'gif', frameCount: 30, delay: animationDuration }
 					);
 					break;
 			}
@@ -104,19 +110,38 @@ export const KolamEditor: React.FC = () => {
 		}
 	};
 
-	// const getEmbedCode = async () => {
-	// 	if (!currentPattern) return;
+	const getEmbedCode = async () => {
+		if (!currentPattern) return;
 
-	// 	try {
-	// 		const embedCode = await KolamExporter.getEmbedCode(currentPattern);
-	// 		navigator.clipboard.writeText(embedCode);
-	// 		alert('Embed code copied to clipboard!');
-	// 	} catch (error) {
-	// 		console.error('Failed to generate embed code:', error);
-	// 	}
-	// };
+		try {
+			const embedURL = generateEmbedURL({
+				size,
+				background: '#7b3306', // Default amber-900 background
+				brush: '#ffffff', // Default white brush
+			});
 
-	return (
+			const embedCode = `<img src="${embedURL}" alt="Kolam Pattern" style="max-width: 100%; height: auto;" />`;
+
+			await navigator.clipboard.writeText(embedCode);
+			alert('Embed code copied to clipboard! This will display the kolam as an SVG image.');
+		} catch (error) {
+			console.error('Failed to generate embed code:', error);
+			alert('Failed to copy embed code. Please try again.');
+		}
+	};
+
+	const copyRawSVG = async () => {
+		if (!currentPattern) return;
+
+		try {
+			const svgContent = await KolamExporter.exportAsSVG(currentPattern);
+			await navigator.clipboard.writeText(svgContent);
+			alert('Raw SVG code copied to clipboard! You can paste this directly into HTML or image editing software.');
+		} catch (error) {
+			console.error('Failed to copy raw SVG:', error);
+			alert('Failed to copy raw SVG. Please try again.');
+		}
+	}; return (
 		<div className="kolam-editor bg-amber-100 text-amber-900 min-h-screen">
 			{/* Header */}
 			<header className="p-6 text-white" style={{ backgroundColor: '#5ba293' }}>
@@ -185,7 +210,7 @@ export const KolamEditor: React.FC = () => {
 								</div>
 							</div>
 							<div className="text-xs text-amber-100 mt-1">
-								Total: {(getAnimationTiming(animationSpeed) / 1000).toFixed(1)}s
+								Total: {(animationDuration / 1000).toFixed(1)}s
 							</div>
 						</div>
 					</div>
@@ -263,19 +288,19 @@ export const KolamEditor: React.FC = () => {
 												>
 													🖼️ Download PNG
 												</button>
-												{/* <button
-													onClick={() => { exportPattern('gif'); setShowDownloadMenu(false); }}
-													className="w-full text-left px-4 py-2 text-amber-100 hover:bg-amber-800 transition-colors"
-												>
-													🎬 Download Animated GIF
-												</button> */}
-												{/* <hr className="my-1 border-white" />
+												<hr className="my-1 border-white" />
 												<button
 													onClick={() => { getEmbedCode(); setShowDownloadMenu(false); }}
 													className="w-full text-left px-4 py-2 text-amber-100 hover:bg-amber-800 transition-colors"
 												>
 													📋 Copy Embed Code
-												</button> */}
+												</button>
+												<button
+													onClick={() => { copyRawSVG(); setShowDownloadMenu(false); }}
+													className="w-full text-left px-4 py-2 text-amber-100 hover:bg-amber-800 transition-colors"
+												>
+													📄 Copy Raw SVG
+												</button>
 											</div>
 										)}
 									</div>
