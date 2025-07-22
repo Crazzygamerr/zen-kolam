@@ -5,6 +5,7 @@ export interface KolamURLParams {
 	duration: number; // milliseconds for animation duration (UI only)
 	background: string; // background color for API
 	brush: string; // brush/stroke color for API
+	initialAutoAnimate: boolean; // whether to auto-animate on initial load and generate
 }
 
 export const useKolamURLParams = (): KolamURLParams => {
@@ -14,7 +15,8 @@ export const useKolamURLParams = (): KolamURLParams => {
 		size: Math.max(3, Math.min(15, parseInt(searchParams.get('size') || '7'))),
 		duration: Math.max(1000, Math.min(30000, parseInt(searchParams.get('duration') || '10000'))),
 		background: searchParams.get('background') || '#fef3c7',
-		brush: searchParams.get('brush') || '#92400e'
+		brush: searchParams.get('brush') || '#92400e',
+		initialAutoAnimate: searchParams.get('initial-auto-animate') === 'true' // defaults to true unless explicitly set to false
 	};
 };
 
@@ -26,7 +28,9 @@ export const updateURL = (params: Partial<KolamURLParams>) => {
 
 	Object.entries(params).forEach(([key, value]) => {
 		if (value !== undefined && value !== null) {
-			searchParams.set(key, value.toString());
+			// Convert camelCase to kebab-case for URL parameters
+			const urlKey = key === 'initialAutoAnimate' ? 'initial-auto-animate' : key;
+			searchParams.set(urlKey, value.toString());
 		}
 	});
 
@@ -42,7 +46,8 @@ export const generateEmbedURL = (params: Partial<KolamURLParams>, baseURL?: stri
 		size: 7,
 		duration: 10000, // Not used by API, but kept for interface consistency
 		background: '#fef3c7',
-		brush: '#92400e'
+		brush: '#92400e',
+		initialAutoAnimate: false
 	};
 
 	const finalParams = { ...defaults, ...params };
