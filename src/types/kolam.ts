@@ -32,7 +32,6 @@ export interface KolamGrid {
 	size: number; // n x n grid
 	cells: GridCell[][];
 	cellSpacing: number;
-	gridOffset: Point;
 }
 
 export interface Line {
