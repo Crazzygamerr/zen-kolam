@@ -4,7 +4,6 @@ import { CurvePoint, Dot, KolamPattern, Line } from '@/types/kolam';
 
 export class KolamGenerator {
 	private static readonly CELL_SPACING = 60;
-	private static readonly GRID_OFFSET = { x: 80, y: 80 };
 
 	// Core constants for kolam generation
 	// pt_dn=[0 1 0 0 0 1 0 0 1 0 1 1 1 0 1 1];
@@ -382,8 +381,8 @@ export class KolamGenerator {
 					dots.push({
 						id: `dot-${i}-${j}`,
 						center: {
-							x: (j + 1) * this.CELL_SPACING + this.GRID_OFFSET.x,
-							y: (i + 1) * this.CELL_SPACING + this.GRID_OFFSET.y
+							x: (j + 1) * this.CELL_SPACING,
+							y: (i + 1) * this.CELL_SPACING
 						},
 						radius: 3,
 						color: '#ffffff',
@@ -399,12 +398,12 @@ export class KolamGenerator {
 						// Convert pattern coordinates: j+real(this), i+imag(this)
 						// Create a single curve with all points (keep curve grouped)
 						const curvePoints: CurvePoint[] = pattern.points.map(point => ({
-							x: ((j + 1) + point.x) * this.CELL_SPACING + this.GRID_OFFSET.x,  // j+real(this)
-							y: ((i + 1) + point.y) * this.CELL_SPACING + this.GRID_OFFSET.y,  // i+imag(this)
+							x: ((j + 1) + point.x) * this.CELL_SPACING,  // j+real(this)
+							y: ((i + 1) + point.y) * this.CELL_SPACING,  // i+imag(this)
 							controlX: point.controlX !== undefined ?
-								((j + 1) + point.controlX) * this.CELL_SPACING + this.GRID_OFFSET.x : undefined,
+								((j + 1) + point.controlX) * this.CELL_SPACING : undefined,
 							controlY: point.controlY !== undefined ?
-								((i + 1) + point.controlY) * this.CELL_SPACING + this.GRID_OFFSET.y : undefined
+								((i + 1) + point.controlY) * this.CELL_SPACING : undefined
 						}));
 
 						curves.push({
@@ -429,13 +428,12 @@ export class KolamGenerator {
 					col: j,
 					patternId: flippedM[i][j],
 					dotCenter: {
-						x: (j + 1) * this.CELL_SPACING + this.GRID_OFFSET.x,
-						y: (i + 1) * this.CELL_SPACING + this.GRID_OFFSET.y
+						x: (j + 1) * this.CELL_SPACING,
+						y: (i + 1) * this.CELL_SPACING
 					}
 				}))
 			),
-			cellSpacing: this.CELL_SPACING,
-			gridOffset: this.GRID_OFFSET
+			cellSpacing: this.CELL_SPACING
 		};
 
 		return {
@@ -446,8 +444,8 @@ export class KolamGenerator {
 			dots,
 			symmetryType: '1D',
 			dimensions: {
-				width: n * this.CELL_SPACING + 2 * this.GRID_OFFSET.x,
-				height: m * this.CELL_SPACING + 2 * this.GRID_OFFSET.y
+				width: (n + 1) * this.CELL_SPACING,
+				height: (m + 1) * this.CELL_SPACING
 			},
 			created: new Date(),
 			modified: new Date()
