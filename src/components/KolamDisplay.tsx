@@ -82,7 +82,7 @@ export const KolamDisplay: React.FC<KolamDisplayProps> = ({
 				{curves.map((curve, index) => {
 					// let curveDelay = animationTiming * (index / curves.length) * 0.25 // Delay based on curve index	
 					const lineAnimTime = (animationTiming / curves.length) * 3 // Animation time for each curve
-					const curveDelay = lineAnimTime * 0.33 * index;
+					const curveDelay = lineAnimTime * index / 3;
 
 					if (curve.curvePoints && curve.curvePoints.length > 1) {
 						// Calculate path length for proper animation
