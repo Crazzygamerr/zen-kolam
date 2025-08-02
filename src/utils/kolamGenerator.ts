@@ -467,4 +467,130 @@ export class KolamGenerator {
 
 		return pattern;
 	}
+
+	/**
+	 * Generate kolam with fixed canvas size and adaptive cell spacing
+	 */
+	static generateKolam1DFixedCanvas(size: number, canvasSize: { width: number; height: number }): KolamPattern {
+		console.log(`🎨 Generating 1D Kolam of size ${size} with fixed canvas ${canvasSize.width}x${canvasSize.height}`);
+
+		const matrix = this.proposeKolam1D(size);
+		console.log(`📊 Generated matrix: ${matrix.length}x${matrix[0].length}`);
+
+		// Calculate adaptive cell spacing to fit in fixed canvas
+		const m = matrix.length;
+		const n = matrix[0].length;
+		const maxGridSize = Math.max(m, n);
+
+		// Add 1 to account for the +1 in dimension calculation
+		const adaptiveCellSpacing = Math.min(
+			canvasSize.width / (n + 1),
+			canvasSize.height / (m + 1)
+		);
+
+		// Convert to visual kolam pattern with adaptive spacing
+		const pattern = this.drawKolamWithSpacing(matrix, adaptiveCellSpacing);
+		console.log(`✅ Created kolam with ${pattern.dots.length} dots and ${pattern.curves.length} curves using ${adaptiveCellSpacing.toFixed(1)}px spacing`);
+
+		return pattern;
+	}
+
+	/**
+	 * Draw kolam with custom cell spacing
+	 */
+	private static drawKolamWithSpacing(M: number[][], cellSpacing: number): KolamPattern {
+		// [m n]=size(M);
+		const m = M.length;
+		const n = M[0].length;
+
+		// M=M(end:-1:1,:); - flip vertically
+		const flippedM: number[][] = [];
+		for (let i = m - 1; i >= 0; i--) {
+			flippedM[m - 1 - i] = [...M[i]];
+		}
+
+		const dots: Dot[] = [];
+		const curves: Line[] = [];
+
+		// for i=1:m
+		//     for j=1:n
+		for (let i = 0; i < m; i++) {
+			for (let j = 0; j < n; j++) {
+				// if M(i,j)>0
+				if (flippedM[i][j] > 0) {
+					// Add dot at grid position
+					// plot(j,i,[clr '.']) - dot at grid position
+					dots.push({
+						id: `dot-${i}-${j}`,
+						center: {
+							x: (j + 1) * cellSpacing,
+							y: (i + 1) * cellSpacing
+						},
+						radius: Math.max(2, cellSpacing / 20), // Scale radius with cell spacing
+						color: '#ffffff',
+						filled: true
+					});
+
+					// this=pt{M(i,j)};
+					// plot(j+real(this),i+imag(this),clr,'Linewidth',1.5)
+					const patternIndex = flippedM[i][j] - 1;  // Convert to 0-indexed
+					if (patternIndex >= 0 && patternIndex < KOLAM_CURVE_PATTERNS.length) {
+						const pattern = KOLAM_CURVE_PATTERNS[patternIndex];
+
+						// Convert pattern coordinates: j+real(this), i+imag(this)
+						// Create a single curve with all points (keep curve grouped)
+						const curvePoints: CurvePoint[] = pattern.points.map(point => ({
+							x: ((j + 1) + point.x) * cellSpacing,  // j+real(this)
+							y: ((i + 1) + point.y) * cellSpacing,  // i+imag(this)
+							controlX: point.controlX !== undefined ?
+								((j + 1) + point.controlX) * cellSpacing : undefined,
+							controlY: point.controlY !== undefined ?
+								((i + 1) + point.controlY) * cellSpacing : undefined
+						}));
+
+						curves.push({
+							id: `curve-${i}-${j}`,
+							start: curvePoints[0],
+							end: curvePoints[curvePoints.length - 1],
+							curvePoints: curvePoints,
+							strokeWidth: Math.max(1, cellSpacing / 40), // Scale stroke width with cell spacing
+							color: '#ffffff'
+						});
+					}
+				}
+			}
+		}
+
+		// Create the grid structure
+		const grid = {
+			size: Math.max(m, n),
+			cells: Array(m).fill(null).map((_, i) =>
+				Array(n).fill(null).map((_, j) => ({
+					row: i,
+					col: j,
+					patternId: flippedM[i][j],
+					dotCenter: {
+						x: (j + 1) * cellSpacing,
+						y: (i + 1) * cellSpacing
+					}
+				}))
+			),
+			cellSpacing: cellSpacing
+		};
+
+		return {
+			id: `kolam-${m}x${n}-fixed`,
+			name: `Kolam ${m}×${n} (Fixed Canvas)`,
+			grid,
+			curves,
+			dots,
+			symmetryType: '1D',
+			dimensions: {
+				width: (n + 1) * cellSpacing,
+				height: (m + 1) * cellSpacing
+			},
+			created: new Date(),
+			modified: new Date()
+		};
+	}
 }
