@@ -42,8 +42,8 @@ export const KolamDisplay: React.FC<KolamDisplayProps> = ({
 	return (
 		<div className={`kolam-container ${className}`}>
 			<svg
-				width={dimensions.width}
-				height={dimensions.height}
+				width="60vh"
+				height="60vh"
 				viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
 				className="kolam-svg"
 				style={{

@@ -9,6 +9,8 @@ import { KolamDisplay } from './KolamDisplay';
 
 export const KolamEditor: React.FC = () => {
 	const [currentPattern, setCurrentPattern] = useState<KolamPattern | null>(null);
+	// TODO : Allow the user to save and share the exact pattern
+	// TODO : Export as video feature
 	const [isExporting, setIsExporting] = useState(false);
 	const [showDownloadMenu, setShowDownloadMenu] = useState(false);
 	const [animationState, setAnimationState] = useState<'stopped' | 'playing' | 'paused'>('stopped');
@@ -163,7 +165,7 @@ export const KolamEditor: React.FC = () => {
 				</div>
 			</header>
 
-			<div className="max-w-6xl mx-auto p-8">
+			<div className="max-w-6xl mx-auto p-8 lg:flex lg:gap-x-4">
 				{/* Display Area */}
 				<div className="kolam-display-area">
 					{currentPattern ? (
@@ -242,7 +244,7 @@ export const KolamEditor: React.FC = () => {
 						Kolam Parameters
 					</h2>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 ">
 						{/* Size Parameter */}
 						<div className="parameter-group">
 							<label htmlFor="size" className="block text-sm font-medium text-amber-100 mb-2">
