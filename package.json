@@ -11,7 +11,7 @@
   "dependencies": {
     "gif.js": "^0.2.0",
     "html2canvas-pro": "^1.5.11",
-    "next": "15.4.2",
+    "next": "15.4.10",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
